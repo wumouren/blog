@@ -10,3 +10,6 @@
 
 
 [React 知识梳理（二）：实现自己的 redux](https://github.com/wumouren/react/issues/2)
+
+
+[React 知识梳理（三）：手写自己的 react-redux](https://github.com/wumouren/react/issues/3)
