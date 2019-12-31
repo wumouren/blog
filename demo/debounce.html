@@ -12,35 +12,93 @@
   <div id="root" style="width: 500px;height: 200px;background: yellow;"></div>
   <script>
     function func(e) {
-      console.log('mousemve', this, e);
+      // console.log('mousemve', this, e);
     }
-    root.addEventListener('mousemove', throttle(func, 3000, { leading: true, trailing: true }));
+    root.addEventListener('mousemove', throttle(func, 2000, { leading: false, trailing: false }));
 
-    function throttle(fn, wait) {
-  let previous = 0;
-  let timer;
-  return function (...args) {
-    let ctx = this;
-    let now = +new Date();
-    let remaining = wait - (now - previous);
-    
-    if (remaining <= 0) {
-      if(timer){
-        clearTimeout(timer);
-        timer = null;
+    /*****
+      思路：
+        1、trailing === false 时，尾随回调不执行
+          可直接添加判断，当 trailing !== false 时，才添加定时器执行尾随回调
+        2、leading ==== false 时，初次回调不执行
+          默认中，初次触发回调执行的判断条件是当 remaining <= 时执行
+          当 previous 等于 0 时，为初次触发，若使回调不执行，我们可以强制将 remaining 值设为大于 0
+          （将 previous 设置为 now ，可得 remaining === wait ，使定时器准时触发）
+
+          执行过程：
+              当我们强制设置 remaining > 0 后，第一次触发函数时，将设置定时器，
+              第二次触发函数时， 因为 timer 为 true 则函数无反应
+              直至定时器执行，设置 timer = null ， previous = 0 
+          注意：
+            定时器执行时，若不设置 previous 为 0 ，当鼠标脱离目标区域，等待时间大于设置 awit 值
+            时，再次触发节流函数，因为 previous 未被释放， !previous 为 false ，则不能强制设置 
+            remaining > 0 ，因此依旧会执行初次回调，产生 BUG
+
+    ****/
+    function throttle(fn, wait, option) {
+      let previous = 0;
+      let timer;
+      let { leading, trailing } = option;
+
+      return function (...args) {
+        let ctx = this;
+        let now = +new Date();
+        if(!previous && leading === false) previous = now; // 通过设置 previous 使  remaining > 0
+        let remaining = wait - (now - previous);
+
+        if (remaining <= 0) {
+          if (timer) {
+            clearTimeout(timer);
+            timer = null;
+          }
+          console.log('remaining')
+          fn.apply(ctx, args);
+          previous = now;
+        } else if (!timer && trailing !== false) { // 当 trailing !== false 时，添加定时器，执行尾随回调
+          timer = setTimeout(function () {
+            console.log('timeout')
+            previous = leading === false ? 0 : +new Date(); // 将 previous 设置为 0
+            timer = null;
+            fn.apply(ctx, args);
+          }, remaining)
+        }
       }
-      fn.apply(ctx, args);
-      previous = now;
-    } else if (!timer) {
-      timer = setTimeout(function () {
-        previous = +new Date();
-        timer = null;
-        fn.apply(ctx, args);
-      }, remaining)
     }
-  }
-}
 
+    // function throttle(func, wait, options) {
+    //   var timeout, context, args, result;
+    //   var previous = 0;
+    //   if (!options) options = {};
+
+    //   var later = function () {
+    //     console.log('timeout')
+    //     previous = options.leading === false ? 0 : new Date().getTime();
+    //     timeout = null;
+    //     func.apply(context, args);
+    //     if (!timeout) context = args = null;
+    //   };
+
+    //   var throttled = function () {
+    //     var now = new Date().getTime();
+    //     if (!previous && options.leading === false) previous = now;
+    //     var remaining = wait - (now - previous);
+    //     context = this;
+    //     args = arguments;
+    //     if (remaining <= 0 || remaining > wait) {
+    //       console.log('remaiining')
+    //       if (timeout) {
+    //         clearTimeout(timeout);
+    //         timeout = null;
+    //       }
+    //       previous = now;
+    //       func.apply(context, args);
+    //       if (!timeout) context = args = null;
+    //     } else if (!timeout && options.trailing !== false) {
+    //       timeout = setTimeout(later, remaining);
+    //     }
+    //   };
+    //   return throttled;
+    // }
   </script>
 </body>
 

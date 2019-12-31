@@ -175,9 +175,70 @@ function throttle(fn, wait) {
 ```
 ## 优化
 ***
-在节流函数中，我们还可以通过传递 `option` 配置参数对初次触发及尾随触发的回调执行加以控制。
+在节流函数中，我们还可以通过传递 `option` 配置参数对初次触发及尾随触发的回调执行加以控制。       
+我们复用改进后的节流函数，默认执行头尾回调。借鉴前人的宝贵经验，我们来指定两个变量，对头尾回调函数的执行加以控制：    
+&emsp;当 leading === false 时，我们取消初次触发的函数回调执行     
+&emsp;当 trailing === false 时，我们取消尾随回调的执行
 
+```js
+/*****
+  思路：
+    1、trailing === false 时，尾随回调不执行
+      可直接添加判断，当 trailing !== false 时，才添加定时器执行尾随回调
+    2、leading ==== false 时，初次回调不执行
+      默认中，初次触发回调执行的判断条件是当 remaining <= 时执行
+      当 previous 等于 0 时，为初次触发，若使回调不执行，我们可以强制将 remaining 值设为大于 0
+      （将 previous 设置为 now ，可得 remaining === wait ，使定时器准时触发）
+
+      执行过程：
+          当我们强制设置 remaining > 0 后，第一次触发函数时，将设置定时器，
+          第二次触发函数时， 因为 timer 为 true 则函数无反应
+          直至定时器执行，设置 timer = null ， previous = 0 
+      注意：
+        定时器执行时，若不设置 previous 为 0 ，当鼠标脱离目标区域，等待时间大于设置 awit 值
+        时，再次触发节流函数，因为 previous 未被释放， !previous 为 false ，则不能强制设置 
+        remaining > 0 ，因此依旧会执行初次回调，产生 BUG
+
+****/
+function throttle(fn, wait, option) {
+  let previous = 0;
+  let timer;
+  let { leading, trailing } = option;
+
+  return function (...args) {
+    let ctx = this;
+    let now = +new Date();
+    if(!previous && leading === false) previous = now; // 通过设置 previous 使  remaining > 0
+    let remaining = wait - (now - previous);
+
+    if (remaining <= 0) {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      fn.apply(ctx, args);
+      previous = now;
+    } else if (!timer && trailing !== false) { // 当 trailing !== false 时，添加定时器，执行尾随回调
+      timer = setTimeout(function () {
+        previous = leading === false ? 0 : +new Date(); // 将 previous 设置为 0
+        timer = null;
+        fn.apply(ctx, args);
+      }, remaining)
+    }
+  }
+}
+```
+观察以上代码可知，`trailing: false` 与 `leading: false` 不能同时设置。 
+
+
+**因为：**  
+&emsp;**当同时设置两个属性时，第一次触发回调，由于 `leading === false` 且 `previous = 0`，所以 `remaining > 0`
+  函数不执行。当第二次触发回调，由于第一次触发时，已经设置 `previous = now` ，所以 `!previous` 为 `true` ，`remaining` 值无法强制设置，直至接下来某次触发回调的时间间隔大于设置的 `wait` 时，代码走进 `remaining <= 0` 的 `if` 判断分支。   
+  而鼠标移出时，因为 `trailing === false` ， 则无法开启定时器，不能初始化`previous = 0` ， 当等待时间大于设置的 `wait` 值时，再次触发回调，会立即执行，因此违反了 `leading === false` ，产生 BUG。** 
 ## 最后
 ***
-以上，我们已经对节流和防抖做了简单了解。
+以上，我们已经对节流和防抖做了简单了解。    
+若有错误，请务必给予指正。      
+谢谢！
+
 
