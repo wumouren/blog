@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="root" style="width: 500px;height: 200px;background: yellow;"></div>
+  <script>
+    function func(e) {
+      console.log('mousemve', this, e);
+    }
+    root.addEventListener('mousemove', throttle(func, 3000, { leading: true, trailing: true }));
+
+    function throttle(fn, wait) {
+  let previous = 0;
+  let timer;
+  return function (...args) {
+    let ctx = this;
+    let now = +new Date();
+    let remaining = wait - (now - previous);
+    
+    if (remaining <= 0) {
+      if(timer){
+        clearTimeout(timer);
+        timer = null;
+      }
+      fn.apply(ctx, args);
+      previous = now;
+    } else if (!timer) {
+      timer = setTimeout(function () {
+        previous = +new Date();
+        timer = null;
+        fn.apply(ctx, args);
+      }, remaining)
+    }
+  }
+}
+
+  </script>
+</body>
+
+</html>
