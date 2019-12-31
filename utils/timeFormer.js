@@ -9,13 +9,6 @@ export function getQueryParam(param) {
   }
   return false;
 }
-export function transformName(name) {
-  const arr = {
-    bug: 'BUG',
-    feature: '需求',
-  };
-  return arr[name];
-}
 
 export function timeFormater(time) {
   const t = time ? new Date(time) : new Date();
