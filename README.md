@@ -17,3 +17,5 @@
 [git 基础用法梳理](https://github.com/wumouren/blog/issues/2)
 
 [node 梳理(一)：npm 相关](https://github.com/wumouren/blog/issues/3)
+
+[知识点 -- 防抖节流](https://github.com/wumouren/blog/issues/4)
