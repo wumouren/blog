@@ -83,14 +83,54 @@ yum install nginx -y
 
 ## 命令
 
-### 启动命令
+### 启动
 ```
-systemctl restart nginx.service
+# 老版
+service nginx start
+
+# 新版
+systemctl start nginx.service
 ```
 
-### 重启命令
+### 重启
 ```
+# 老版
+service nginx restart
+
+# 新版
+systemctl restart nginx.service
+```
+### 停止
+```
+# 老版
+service nginx stop
+
+# 新版
+systemctl stop nginx.service
+```
+### 查看状态
+```
+# 老版
+service nginx status
+
+# 新版
+systemctl status nginx.service
+```
+### 重新加载
+```
+# 老版
+nginx -s reload
+
+# 新版
 systemctl reload nginx.service
 ```
 
+### 检验配置文件是否正确
+```
+nginx -t
+```
+
+
 ## 配置
+
+### 基础配置
